@@ -1,0 +1,145 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package pl.edu.wat.wcy.pz.w1;
+
+import javax.swing.JPanel;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.HeadlessException;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author MSI
+ */
+public class PongGamePanel extends JPanel implements Runnable, KeyListener, MouseListener  {
+
+    public PongGamePanel() throws HeadlessException {
+        this.setFocusable(true);
+        this.addKeyListener(this);
+        this.addMouseListener(this);
+        this.grabFocus();
+        animator = new Thread(this);
+        animator.start();
+    }
+
+    private boolean isGameOver = false;
+    private Thread animator;
+
+    //obiekty gry
+    private int ballX, ballY = 0;
+    private int ballW = 20;
+    private int ballH = 20;
+    private int ballDX = 2;
+    private int ballDY = 2;
+
+    private int padUserX, padUserY = 0;
+    private int padUserW = 30;
+    private int padUserH = 60;
+    
+
+    private void initElements() {
+        ballX = this.getWidth() / 2 - ballW / 2;
+        ballY = this.getHeight() / 2 - ballH / 2;
+        padUserX = 0;
+        padUserY = getHeight()/2 - padUserH/2;
+        
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+        g.setColor(Color.white);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.red);
+        g.fillOval(ballX, ballY, ballW, ballH);
+        
+        g.setColor(Color.PINK);
+        g.fillRect(padUserX, padUserY, padUserW, padUserH);
+        
+    }
+
+    @Override
+    public void run() {
+        initElements();
+        while (!isGameOver) {
+            // logika gry
+            ballX = ballX + ballDX;
+            ballY = ballY + ballDY;
+            if (ballX < 0) {
+                ballX = 0;
+                ballDX = -ballDX;
+            }
+            if (ballX + ballW > getWidth()) {
+                ballX = getWidth() - ballW;
+                ballDX = -ballDX;
+            }
+            if (ballY < 0) {
+                ballY = 0;
+                ballDY = -ballDY;
+            }
+            if (ballY + ballH > getHeight()) {
+                ballY = getHeight() - ballH;
+                ballDY = -ballDY;
+            }
+
+            // obsługa interakcji
+            // odrysowanie
+            this.repaint();
+            try {
+                // dostosowanie FPS
+                Thread.sleep(10);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "keyPressed():" + e.getKeyCode());
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        Logger.getLogger(MainFrame.class.getName()).log(Level.INFO, "keyReleased():" + e.getKeyCode());
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+      
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+       
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+       
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        
+    }
+
+}
