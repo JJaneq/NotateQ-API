@@ -17,4 +17,9 @@ class FilesSerializer(serializers.ModelSerializer):
         valid_extensions = ['.pdf', '.docx', '.txt']
         if ext.lower() not in valid_extensions:
             raise ValidationError(f'Nieprawidłowy format pliku. Dozwolone: {", ".join(valid_extensions)}')
+
+        max_size_mb = 5
+        if value.size > max_size_mb * 1024 * 1024:
+            raise ValidationError(f'Plik jest za duży! Maksymalny rozmiar to {max_size_mb} MB.')
+
         return value
