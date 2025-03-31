@@ -19,6 +19,7 @@ class Files(models.Model):
     author = models.CharField(max_length=100)
     upload_date = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='store/files/')
+    downloads = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title

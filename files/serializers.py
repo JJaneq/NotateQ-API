@@ -10,7 +10,8 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'description', 'category', 'author', 'upload_date', 'file']
+        fields = ['id', 'title', 'description', 'category', 'author', 'upload_date', 'file', 'downloads']
+        extra_kwargs = {'downloads': {'read_only': True}}
 
     def validate_file(self, value):
         ext = os.path.splitext(value.name)[1]
@@ -23,3 +24,8 @@ class FilesSerializer(serializers.ModelSerializer):
             raise ValidationError(f'Plik jest za duży! Maksymalny rozmiar to {max_size_mb} MB.')
 
         return value
+
+    def update(self, instance, validated_data):
+        if 'downloads' in validated_data:
+            raise serializers.ValidationError("Downloads can't be updated directly.")
+        return super().update(instance, validated_data)
