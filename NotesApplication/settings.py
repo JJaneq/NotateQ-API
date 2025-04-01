@@ -1,7 +1,11 @@
 import os
 from pathlib import Path
+import environ
 
 from django.conf.global_settings import MEDIA_ROOT
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,12 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(bkjz+-%841xzl)qxv#v+hj)n5cmdko1is^7%g&7s%(s&028z%'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -71,8 +75,12 @@ WSGI_APPLICATION = 'NotesApplication.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME'),
+	'USER': env('DB_USER'),
+	'PASSWORD': env('DB_PASSWORD'),
+	'HOST': env('DB_HOST'),
+	'PORT': env('DB_PORT')
     }
 }
 
@@ -120,7 +128,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-MEDIA_URL = '/media/'
+
+MEDIA_URL = f'http://{ALLOWED_HOSTS[0]}:8080/media/'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
