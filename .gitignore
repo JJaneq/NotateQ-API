@@ -1,2 +1,3 @@
-/NotesApplication/.env
-/media
+media/
+.env
+files/migrations/
