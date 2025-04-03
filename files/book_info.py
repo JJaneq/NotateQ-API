@@ -22,26 +22,25 @@ import requests
 #         print(f"return {1+distance}")
 #         return 1 + distance
 
-
-
 class BookInfo:
-    def __init__(self, title):
+    def __init__(self, title, language=''):
         self.title = title.replace('-', '+')
         self.author = ""
         self.isbn = ""
         self.description = ""
+        self.language = language
         self.read_data()
 
     def read_data(self):
-        url = "https://www.googleapis.com/books/v1/volumes?q=+intitle:" + self.title
+        if self.language:
+            url = f"https://www.googleapis.com/books/v1/volumes?q={self.title}&langRestrict={self.language}"
+            print(url)
+        else:
+            url = f"https://www.googleapis.com/books/v1/volumes?q=+intitle:{self.title}"
         response = requests.get(url)
-        print(type(response.json()))
 
         books = []
         for item in response.json()["items"]:
-            print(f"{item['volumeInfo']['title']}: {item['volumeInfo'].get('subtitle')} "
-                  f"-- {item['volumeInfo'].get('authors')}: {item['volumeInfo'].get('publishedDate')}")
-
             title = item['volumeInfo']['title']
             subtitle = item['volumeInfo'].get('subtitle') if item['volumeInfo'].get('subtitle') else ""
             authors = item['volumeInfo'].get('authors') if item['volumeInfo'].get('authors') else ""

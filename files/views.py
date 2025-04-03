@@ -19,3 +19,8 @@ class FilesViewSet(viewsets.ModelViewSet):
 def get_book_info(request, book_title):
     book = BookInfo(book_title)
     return Response(book.read_data())
+
+@api_view(['GET'])
+def get_book_info_language(request, language, book_title):
+    book = BookInfo(book_title, language)
+    return Response(book.read_data())
