@@ -20,6 +20,7 @@ class Files(models.Model):
     upload_date = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='store/files/')
     downloads = models.PositiveIntegerField(default=0)
+    delete_time = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.title

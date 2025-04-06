@@ -10,8 +10,8 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'description', 'category', 'author', 'upload_date', 'file', 'downloads']
-        extra_kwargs = {'downloads': {'read_only': True}}
+        fields = ['id', 'title', 'description', 'category', 'author', 'upload_date', 'file', 'downloads', 'delete_time']
+        extra_kwargs = {'downloads': {'read_only': True}, 'delete_time': {'read_only': True}}
 
     def validate_file(self, value):
         ext = os.path.splitext(value.name)[1]
