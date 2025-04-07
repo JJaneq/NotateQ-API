@@ -12,6 +12,16 @@ class Category(models.Model):
         verbose_name_plural = 'Categories'
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 class Files(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -20,6 +30,7 @@ class Files(models.Model):
     upload_date = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='store/files/')
     downloads = models.PositiveIntegerField(default=0)
+    tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):
         return self.title
