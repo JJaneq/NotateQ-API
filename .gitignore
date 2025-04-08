@@ -1,3 +1,4 @@
 media/
-NotesApplication/.env
-files/migrations/
+.env
+__pycache__/
+celerybeat-schedule.*

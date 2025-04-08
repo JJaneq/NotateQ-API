@@ -31,6 +31,8 @@ class Files(models.Model):
     file = models.FileField(upload_to='store/files/')
     downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, blank=True)
+    delete_time = models.DateTimeField(blank=True, null=True)
+
 
     def __str__(self):
         return self.title

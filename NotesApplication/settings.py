@@ -137,3 +137,7 @@ MEDIA_URL = f'http://{ALLOWED_HOSTS[0]}:8080/media/'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
+#Celery settings
+CELERY_TIMEZONE = 'Europe/Warsaw'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
