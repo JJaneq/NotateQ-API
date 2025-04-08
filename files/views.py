@@ -1,8 +1,8 @@
 from django.shortcuts import render
 
-from .models import Files
+from .models import Files, Category
 from rest_framework import viewsets, status
-from .serializers import FilesSerializer
+from .serializers import FilesSerializer, CategorySerializer
 from rest_framework.decorators import action
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -29,3 +29,14 @@ class FilesViewSet(viewsets.ModelViewSet):
         file.delete_time = timezone.now() + timedelta(days=14)
         file.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @action(detail=True, methods=['get'], url_path='files')
+    def files(self, request, pk=None):
+        category = self.get_object()
+        files = Files.objects.filter(category=category)
+        serializer = FilesSerializer(files, many=True, context={'request': request})
+        return Response(serializer.data)

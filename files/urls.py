@@ -4,7 +4,7 @@ from .views import *
 
 router = DefaultRouter()
 router.register('files', FilesViewSet, basename='files')
-
+router.register('categories', CategoryViewSet, basename='categories')
 
 urlpatterns = [
     path('api/', include(router.urls)),

@@ -8,6 +8,11 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['name']
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
 class FilesSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), allow_null=True, required=False
