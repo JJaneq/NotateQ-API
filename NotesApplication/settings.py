@@ -4,12 +4,11 @@ import environ
 
 from django.conf.global_settings import MEDIA_ROOT
 
-env = environ.Env()
-environ.Env.read_env()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -133,11 +132,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-MEDIA_URL = f'http://{ALLOWED_HOSTS[0]}:8080/media/'
+MEDIA_URL = f'/media/'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 #Celery settings
 CELERY_TIMEZONE = 'Europe/Warsaw'
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'

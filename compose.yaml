@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  django-web:
+    build: .
+    container_name: django-docker
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      - db
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7.4.2
+    ports:
+      - "6379:6379"
+  
+  celery-worker:
+    build:
+      context: .
+      # dockerfile: dockerfile
+    image: python:3.12.10
+    command: ['celery', '-A', 'NotesApplication',  'worker', '--loglevel=info']
+    depends_on:
+      - redis
+      - django-web
+    env_file:
+    - .env
+
+  celery-beat:
+    build:
+      context: .
+      # dockerfile: dockerfile
+    image: python:3.12.10
+    command: ['celery', '-A', 'NotesApplication',  'beat', '--loglevel=info']
+    depends_on:
+      - redis
+      - celery-worker
+      - django-web
+    env_file:
+    - .env
+
+volumes:
+  postgres_data:
+
+

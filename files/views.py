@@ -26,7 +26,7 @@ class FilesViewSet(viewsets.ModelViewSet):
     
     def destroy(self, request, *args, **kwargs):
         file = self.get_object()
-        file.delete_time = timezone.now() + timedelta(days=14)
+        file.delete_time = timezone.now() + timedelta(minutes=5)
         file.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
