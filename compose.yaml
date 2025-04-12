@@ -1,3 +1,10 @@
+networks:
+  internal:
+    internal: true
+  external:
+    driver: bridge
+  
+
 services:
   db:
     image: postgres:17
@@ -5,8 +12,8 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
+    networks:
+      - internal
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
@@ -16,7 +23,7 @@ services:
     build: .
     container_name: django-docker
     ports:
-      - "8000:8000"
+      - 127.0.0.1:8000:8000
     volumes:
       - ./media:/app/media
     depends_on:
@@ -31,11 +38,17 @@ services:
       DB_PORT: ${DB_PORT}
     env_file:
       - .env
+    networks:
+      - internal
+      - external
+      
 
   redis:
     image: redis:7.4.2
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
+    networks:
+      - internal
   
   celery-worker:
     build:
@@ -46,6 +59,8 @@ services:
     depends_on:
       - redis
       - django-web
+    networks:
+      - internal
     env_file:
     - .env
 
@@ -59,6 +74,8 @@ services:
       - redis
       - celery-worker
       - django-web
+    networks:
+      - internal
     env_file:
     - .env
 
