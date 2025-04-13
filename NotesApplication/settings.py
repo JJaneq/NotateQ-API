@@ -21,6 +21,7 @@ DEBUG = env('DEBUG', default=False)
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', default='127.0.0.1').split(',')
 
+CORS_ALLOWED_ORIGINS = env('ALLOWED_ORIGINS').split(',')
 
 # Application definition
 
