@@ -25,6 +25,7 @@ class Tag(models.Model):
 class Files(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    #TODO: category -> many to many
     category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
     author = models.CharField(max_length=100)
     upload_date = models.DateTimeField(auto_now_add=True)

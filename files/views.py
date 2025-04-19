@@ -6,16 +6,19 @@ from .serializers import FilesSerializer, CategorySerializer
 from rest_framework.decorators import action
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from django.utils import timezone
 from datetime import timedelta
-
+from .filters import FilesFilter
 
 # Create your views here.
 
 class FilesViewSet(viewsets.ModelViewSet):
     queryset = Files.objects.all()
     serializer_class = FilesSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = FilesFilter
 
     @action(detail=True, methods=['post'])
     def increment_downloads(self, request, pk=None):
