@@ -2,3 +2,4 @@ media/
 .env
 __pycache__/
 celerybeat-schedule.*
+.idea
