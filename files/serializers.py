@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-from .models import Files, Category, Tag
+from .models import Files, Category, Tag, Books
 import os
 
 class TagSerializer(serializers.ModelSerializer):
@@ -13,9 +13,15 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name']
 
+class BooksSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Books
+        fields = ['id', 'title']
+
 class FilesSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), allow_null=True, required=False
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), 
+        many=True
     )
     tags = serializers.ListField(
         child=serializers.CharField(), required=False, write_only=True
@@ -27,9 +33,13 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'description', 'category', 'author', 'upload_date', 'file', 'downloads', 'tags', 'tag_names', 'delete_time']
-        extra_kwargs = {'downloads': {'read_only': True}, 'delete_time': {'read_only': True}}
-
+        fields = ['id', 'title', 'description', 'categories', 'author', 'upload_date', 'file', 'downloads',
+                'tags', 'tag_names', 'delete_time', 'bibliography', 'rating', 'rating_count', 'date']
+        extra_kwargs = {'downloads': {'read_only': True}, 
+                        'delete_time': {'read_only': True},
+                        'rating': {'read_only': True},
+                        'rating_count': {'read_only': True},
+                        }
 
     def validate_file(self, value):
         ext = os.path.splitext(value.name)[1]
@@ -45,16 +55,27 @@ class FilesSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
+        categories = validated_data.pop('categories', [])
+        books_data = validated_data.pop('bibliography', [])
         file_instance = Files.objects.create(**validated_data)
 
         for tag_name in tags_data:
             tag, _ = Tag.objects.get_or_create(name=tag_name.lower())
             file_instance.tags.add(tag)
 
+           
+        if categories:
+            file_instance.categories.set(categories)
+
+        for book in books_data:
+            book_instance, _ = Books.objects.get_or_create(title=book.title)
+            file_instance.bibliography.add(book_instance)
+
         return file_instance
 
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
+        categories = validated_data.pop('categories', [])
 
         if 'downloads' in validated_data:
             raise serializers.ValidationError("Downloads can't be updated directly.")
@@ -71,5 +92,8 @@ class FilesSerializer(serializers.ModelSerializer):
             for tag_name in new_tags - current_tags:
                 tag, _ = Tag.objects.get_or_create(name=tag_name)
                 instance.tags.add(tag)
+
+        if categories:
+            instance.categories.set(categories)
 
         return super().update(instance, validated_data)
