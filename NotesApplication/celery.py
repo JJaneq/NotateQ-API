@@ -16,7 +16,7 @@ def debug_task(self):
 app.conf.beat_schedule = {
     'check-remove-files': {
         'task': 'files.tasks.check_remove_files',
-        'schedule': 60.0 * 60.0,
+        'schedule': 60.0, #* 60.0,
     },
 }
 

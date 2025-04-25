@@ -1,0 +1,85 @@
+networks:
+  internal:
+    internal: true
+  external:
+    driver: bridge
+  
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - internal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  django-web:
+    build: .
+    container_name: django-docker
+    ports:
+      - 127.0.0.1:8000:8000
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      - db
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    env_file:
+      - .env
+    networks:
+      - internal
+      - external
+      
+
+  redis:
+    image: redis:7.4.2
+    # ports:
+    #   - "6379:6379"
+    networks:
+      - internal
+  
+  celery-worker:
+    build:
+      context: .
+      # dockerfile: dockerfile
+    image: python:3.12.10
+    command: ['celery', '-A', 'NotesApplication',  'worker', '--loglevel=info']
+    depends_on:
+      - redis
+      - django-web
+    networks:
+      - internal
+    env_file:
+    - .env
+
+  celery-beat:
+    build:
+      context: .
+      # dockerfile: dockerfile
+    image: python:3.12.10
+    command: ['celery', '-A', 'NotesApplication',  'beat', '--loglevel=info']
+    depends_on:
+      - redis
+      - celery-worker
+      - django-web
+    networks:
+      - internal
+    env_file:
+    - .env
+
+volumes:
+  postgres_data:
+
+
