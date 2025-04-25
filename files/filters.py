@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 from .models import Files, Category, Books, Tag
 
 class FilesFilter(filters.FilterSet):
+    #TODO: make title search instead of filter
     title = filters.CharFilter(lookup_expr='icontains')
     author = filters.CharFilter()
     category = filters.ModelMultipleChoiceFilter(field_name='categories', queryset=Category.objects.all())
