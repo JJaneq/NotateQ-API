@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from .models import Files, Category, Tag, Books
+from django.contrib.auth.models import User
 import os
 
 class TagSerializer(serializers.ModelSerializer):
@@ -27,6 +28,7 @@ class FilesSerializer(serializers.ModelSerializer):
         child=serializers.CharField(), required=False, write_only=True
     )
     tag_names = serializers.SerializerMethodField(read_only=True)
+    author = serializers.CharField(source='author.username', read_only=True)
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
@@ -58,7 +60,8 @@ class FilesSerializer(serializers.ModelSerializer):
         categories = validated_data.pop('categories', [])
         books_data = validated_data.pop('bibliography', [])
         file_instance = Files.objects.create(**validated_data)
-
+        file_instance.author = self.context['request'].user
+        
         for tag_name in tags_data:
             tag, _ = Tag.objects.get_or_create(name=tag_name.lower())
             file_instance.tags.add(tag)
@@ -97,3 +100,10 @@ class FilesSerializer(serializers.ModelSerializer):
             instance.categories.set(categories)
 
         return super().update(instance, validated_data)
+    
+class UserSerializer(serializers.ModelSerializer):
+    files = serializers.PrimaryKeyRelatedField(many=True, queryset=Files.objects.all())
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'files']

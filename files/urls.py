@@ -8,4 +8,7 @@ router.register('categories', CategoryViewSet, basename='categories')
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/users/', UserList.as_view(), name='user-list'),
+    path('api/users/<int:pk>/', UserDetail.as_view(), name='user-detail'),
+    path('auth/', include('rest_framework.urls')),
 ]
