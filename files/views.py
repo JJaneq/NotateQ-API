@@ -12,6 +12,11 @@ from django.utils import timezone
 from datetime import timedelta
 from .filters import FilesFilter
 
+from django.http import FileResponse, Http404
+import os
+from django.conf import settings
+from urllib.parse import quote
+
 # Create your views here.
 
 class FilesViewSet(viewsets.ModelViewSet):
@@ -43,3 +48,26 @@ class CategoryViewSet(viewsets.ModelViewSet):
         files = Files.objects.filter(category=category)
         serializer = FilesSerializer(files, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+def download_file(request, filename):
+    # Szukamy rekordu pliku po nazwie pliku
+    try:
+        file_obj = Files.objects.get(file__contains=filename)
+    except Files.DoesNotExist:
+        raise Http404("Plik nie istnieje w bazie danych")
+
+    filepath = os.path.join(settings.MEDIA_ROOT, 'store/files', filename)
+    if not os.path.exists(filepath):
+        raise Http404("Plik fizycznie nie istnieje")
+
+    # Pobierz nazwę z tytułu i dołóż rozszerzenie oryginalnego pliku
+    original_extension = os.path.splitext(filename)[1]
+    download_name = f"{file_obj.title}{original_extension}"
+
+    # Kodujemy nazwę do Content-Disposition, żeby działało z dziwnymi znakami
+    encoded_filename = quote(download_name)
+
+    response = FileResponse(open(filepath, 'rb'), as_attachment=True)
+    response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"'
+    return response

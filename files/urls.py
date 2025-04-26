@@ -8,4 +8,5 @@ router.register('categories', CategoryViewSet, basename='categories')
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('download/<str:filename>/', download_file, name='download-file'),
 ]
