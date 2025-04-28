@@ -1,8 +1,8 @@
 from django.shortcuts import render
 
-from .models import Files, Category
+from .models import Files, Category, Tag
 from rest_framework import viewsets, status
-from .serializers import FilesSerializer, CategorySerializer
+from .serializers import FilesSerializer, CategorySerializer, TagSerializer
 from rest_framework.decorators import action
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -43,3 +43,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         files = Files.objects.filter(category=category)
         serializer = FilesSerializer(files, many=True, context={'request': request})
         return Response(serializer.data)
+    
+class TagsViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+    @action(detail=True, methods=['get'], url_path='tags')
+    def show_tags(self, request):
+        tags = self.get_object().tags.all()
+        serializer = TagSerializer(tags, many=True, context={'request': request})
+        return Response(serializer.data)
+
