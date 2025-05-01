@@ -9,4 +9,5 @@ router.register('tags', TagsViewSet, basename='tags')
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('download/<str:filename>/', download_file, name='download-file'),
 ]
