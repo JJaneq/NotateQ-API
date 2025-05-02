@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from .models import Files, Category, Tag, Books
 from django.contrib.auth.models import User
+from .utils import send_activation_email
 import os
 
 class TagSerializer(serializers.ModelSerializer):
@@ -102,8 +103,26 @@ class FilesSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 class UserSerializer(serializers.ModelSerializer):
-    files = serializers.PrimaryKeyRelatedField(many=True, queryset=Files.objects.all())
+    files = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'files']
+        fields = ['id', 'username', 'email', 'files', 'password1', 'password2']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError("Hasła nie pasują do siebie.")
+        return attrs
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password1')
+        validated_data.pop('password2')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.is_active = True # Set to False if you want to require email activation - does not work with this code
+        user.save()
+        send_activation_email(user, self.context.get('request'))
+        return user

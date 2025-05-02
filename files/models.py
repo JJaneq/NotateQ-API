@@ -32,7 +32,6 @@ class Books(models.Model):
 class Files(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    # category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
     categories = models.ManyToManyField(Category, blank=True)
     author = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='files')
     upload_date = models.DateTimeField(auto_now_add=True)
