@@ -38,6 +38,28 @@ class FilesViewSet(viewsets.ModelViewSet):
         file.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['post'])
+    def rate(self, request, pk=None):
+        file = self.get_object()
+        try:
+            new_rating = float(request.data.get('rating'))
+            if not (0 <= new_rating <= 5):
+                return Response({'error': 'Ocena musi być w zakresie 0-5'}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError):
+            return Response({'error': 'Nieprawidłowa wartość oceny'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        total = file.rating * file.rating_count
+        file.rating_count += 1
+        file.rating = (total + new_rating) / file.rating_count
+        file.save(update_fields=['rating', 'rating_count'])
+
+        return Response({
+            'rating': file.rating,
+            'rating_count': file.rating_count
+        }, status=status.HTTP_200_OK)
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
