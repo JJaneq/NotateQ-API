@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 import os
+import datetime
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -22,18 +23,27 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+class Books(models.Model):
+    title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.title
+
 class Files(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    #TODO: category -> many to many
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
+    # category = models.ForeignKey(Category, on_delete=models.PROTECT, blank=True, null=True)
+    categories = models.ManyToManyField(Category, blank=True)
     author = models.CharField(max_length=100)
     upload_date = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to='store/files/')
     downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, blank=True)
     delete_time = models.DateTimeField(blank=True, null=True)
-
+    date = models.DateField(default=datetime.datetime.now)
+    rating = models.FloatField(default=0.0)
+    rating_count = models.PositiveIntegerField(default=0)
+    bibliography = models.ManyToManyField(Books, blank=True)
 
     def __str__(self):
         return self.title
