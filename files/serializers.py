@@ -115,6 +115,8 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:
             raise serializers.ValidationError("Hasła nie pasują do siebie.")
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError("Użytkownik z tym adresem e-mail już istnieje.")
         return attrs
     
     def create(self, validated_data):
@@ -122,7 +124,7 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         user = User(**validated_data)
         user.set_password(password)
-        user.is_active = True # Set to False if you want to require email activation - does not work with this code
+        user.is_active = False
         user.save()
         send_activation_email(user, self.context.get('request'))
         return user
