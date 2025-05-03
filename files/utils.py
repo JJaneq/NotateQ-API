@@ -10,9 +10,6 @@ def send_activation_email(user, request):
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     activation_link = f'http://{domain}/activate/{uid}/{token}/'
-    print(f"uid wygenerowane: {uid}")
-    print(f"token wygenerowany: {token}")
-    print(f"link: {activation_link}")
     send_mail(
         'Activation link',
         'Click the link to activate your account: ' + activation_link,

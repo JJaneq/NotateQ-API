@@ -70,8 +70,6 @@ class RegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        user.set_password(user.password)
-        user.save()
         return Response({
             'username': user.username,
             'email': user.email,
@@ -89,10 +87,6 @@ class ActivateView(generics.GenericAPIView):
             user = None
         if user is None:
             return Response('User not found', status=status.HTTP_404_NOT_FOUND)
-        print(f"uid64 z URL: {uid64}")
-        print(f"uid decoded: {uid}")
-        print(f"token z URL: {token}")
-        print(f"user.last_login: {user.last_login}")
         if default_token_generator.check_token(user, token):
             user.is_active = True
             user.save()
