@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 import environ
 
 from django.conf.global_settings import MEDIA_ROOT
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'files',
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
 ]
@@ -82,10 +84,6 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
-        # Uncomment if sslmode is required
-        # 'OPTIONS': {
-        #     'sslmode': 'require',
-        # }
     }
 }
 
@@ -155,7 +153,22 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
+
+# JWT settings
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+#     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+#     'SLIDING_TOKEN_LIFETIME': timedelta(days=30),
+#     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
+#     'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
+# }
 
 # Celery settings
 CELERY_TIMEZONE = 'Europe/Warsaw'

@@ -1,24 +1,21 @@
-from django.shortcuts import render
+from datetime import timedelta
 
 from .models import Files, Category
-from rest_framework import viewsets, status
+from .filters import FilesFilter
+from .permissions import IsOwnerOrReadOnly
 from .serializers import FilesSerializer, CategorySerializer, UserSerializer
+
 from django.contrib.auth.models import User
-from rest_framework import generics
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+
+from rest_framework import viewsets, status, generics, permissions 
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions
-from .permissions import IsOwnerOrReadOnly
-
-from django.utils import timezone
-from datetime import timedelta
-from .filters import FilesFilter
-
-# Create your views here.
 
 class FilesViewSet(viewsets.ModelViewSet):
     queryset = Files.objects.all()
