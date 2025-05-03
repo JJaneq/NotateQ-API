@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from .models import Files, Category, Tag, Books
+from django.contrib.auth.models import User
+from .utils import send_activation_email
 import os
 
 class TagSerializer(serializers.ModelSerializer):
@@ -27,6 +29,7 @@ class FilesSerializer(serializers.ModelSerializer):
         child=serializers.CharField(), required=False, write_only=True
     )
     tag_names = serializers.SerializerMethodField(read_only=True)
+    author = serializers.CharField(source='author.username', read_only=True)
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
@@ -58,7 +61,8 @@ class FilesSerializer(serializers.ModelSerializer):
         categories = validated_data.pop('categories', [])
         books_data = validated_data.pop('bibliography', [])
         file_instance = Files.objects.create(**validated_data)
-
+        file_instance.author = self.context['request'].user
+        
         for tag_name in tags_data:
             tag, _ = Tag.objects.get_or_create(name=tag_name.lower())
             file_instance.tags.add(tag)
@@ -97,3 +101,30 @@ class FilesSerializer(serializers.ModelSerializer):
             instance.categories.set(categories)
 
         return super().update(instance, validated_data)
+    
+class UserSerializer(serializers.ModelSerializer):
+    files = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'files', 'password1', 'password2']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError("Hasła nie pasują do siebie.")
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError("Użytkownik z tym adresem e-mail już istnieje.")
+        return attrs
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password1')
+        validated_data.pop('password2')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.is_active = False
+        user.save()
+        send_activation_email(user, self.context.get('request'))
+        return user

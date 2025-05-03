@@ -1,29 +1,34 @@
-from django.shortcuts import render
+import os
+from datetime import timedelta
 
 from .models import Files, Category, Tag
-from rest_framework import viewsets, status
-from .serializers import FilesSerializer, CategorySerializer, TagSerializer
-from rest_framework.decorators import action
-from rest_framework.decorators import api_view
+from .filters import FilesFilter
+from .permissions import IsOwnerOrReadOnly
+from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer
+
+from django.http import FileResponse, Http404
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+
+from rest_framework import viewsets, status, generics, permissions 
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
-from django.utils import timezone
-from datetime import timedelta
-from .filters import FilesFilter
-
-from django.http import FileResponse, Http404
-import os
-from django.conf import settings
 from urllib.parse import quote
 
-# Create your views here.
 
 class FilesViewSet(viewsets.ModelViewSet):
     queryset = Files.objects.all()
     serializer_class = FilesSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = FilesFilter
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, 
+                          IsOwnerOrReadOnly]
 
     @action(detail=True, methods=['post'])
     def increment_downloads(self, request, pk=None):
@@ -37,6 +42,10 @@ class FilesViewSet(viewsets.ModelViewSet):
         file.delete_time = timezone.now() + timedelta(minutes=5)
         file.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+        
 
     @action(detail=True, methods=['post'])
     def rate(self, request, pk=None):
@@ -70,7 +79,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         files = Files.objects.filter(category=category)
         serializer = FilesSerializer(files, many=True, context={'request': request})
         return Response(serializer.data)
-    
+
 class TagsViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -80,7 +89,45 @@ class TagsViewSet(viewsets.ModelViewSet):
         tags = self.get_object().tags.all()
         serializer = TagSerializer(tags, many=True, context={'request': request})
         return Response(serializer.data)
+      
+# Users  views
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        return Response({
+            'username': user.username,
+            'email': user.email,
+        }, status=status.HTTP_201_CREATED)
+
+class ActivateView(generics.GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def get(self, request, uid64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uid64))
+            user = User.objects.get(pk=uid)
+        except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        if user is None:
+            return Response('User not found', status=status.HTTP_404_NOT_FOUND)
+        if default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return Response('Account activated', status=status.HTTP_200_OK)
+        else:
+            return Response('Activation link is invalid', status=status.HTTP_400_BAD_REQUEST) 
 
 def download_file(request, filename):
 
