@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-from .models import Files, Category, Tag, Books
+from .models import Files, Category, Tag, Books, Comment
 from django.contrib.auth.models import User
 from .utils import send_activation_email
 import os
@@ -128,3 +128,11 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         send_activation_email(user, self.context.get('request'))
         return user
+    
+class CommentSerializer(serializers.ModelSerializer):
+    author_username = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'file', 'author_username', 'content', 'created_at']
+        read_only_fields = ['id', 'created_at']

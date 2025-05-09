@@ -1,10 +1,10 @@
 import os
 from datetime import timedelta
 
-from .models import Files, Category, Tag
+from .models import Files, Category, Tag, Comment
 from .filters import FilesFilter
 from .permissions import IsOwnerOrReadOnly
-from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer
+from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -128,6 +128,15 @@ class ActivateView(generics.GenericAPIView):
             return Response('Account activated', status=status.HTTP_200_OK)
         else:
             return Response('Activation link is invalid', status=status.HTTP_400_BAD_REQUEST) 
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+    
 
 def download_file(request, filename):
 
