@@ -58,6 +58,14 @@ class Files(models.Model):
         if ext.lower() not in valid_extensions:
             raise ValidationError(f'Nieprawidłowy format pliku. Dozwolone: {valid_extensions}')
         
+class FileRating(models.Model):
+    file = models.ForeignKey(Files, on_delete=models.CASCADE)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'Rating {self.rating} for {self.file} by {self.user}'
+
 class Comment(models.Model):
     file = models.ForeignKey(Files, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey('auth.User', on_delete=models.CASCADE)

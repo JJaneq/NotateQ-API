@@ -1,8 +1,8 @@
 from django_filters import rest_framework as filters
-from .models import Files, Category, Books, Tag
+from .models import Files, Category, Books, Tag, Comment, FileRating
+from django.contrib.auth.models import User
 
 class FilesFilter(filters.FilterSet):
-    #TODO: make title search instead of filter
     title = filters.CharFilter(lookup_expr='icontains')
     author = filters.CharFilter()
     category = filters.ModelMultipleChoiceFilter(field_name='categories', queryset=Category.objects.all())
@@ -27,3 +27,18 @@ class FilesFilter(filters.FilterSet):
         elif value in ['false', False]:
             return queryset.exclude(delete_time__isnull=False)
         return queryset
+    
+class CommentFilter(filters.FilterSet):
+    file = filters.ModelChoiceFilter(queryset=Files.objects.all())
+
+    class Meta:
+        model = Comment
+        fields = ['file']
+
+class FileRatingFilter(filters.FilterSet):
+    file = filters.ModelChoiceFilter(queryset=Files.objects.all())
+    user = filters.ModelChoiceFilter(queryset=User.objects.all())
+
+    class Meta:
+        model = FileRating
+        fields = ['file', 'user']

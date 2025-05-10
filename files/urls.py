@@ -10,6 +10,7 @@ router.register('files', FilesViewSet, basename='files')
 router.register('categories', CategoryViewSet, basename='categories')
 router.register('tags', TagsViewSet, basename='tags')
 router.register('comments', CommentViewSet, basename='comments')
+router.register('files_rating', FileRatingViewSet, basename='file-rating')
 
 urlpatterns = [
     path('api/', include(router.urls)),

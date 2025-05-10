@@ -1,10 +1,10 @@
 import os
 from datetime import timedelta
 
-from .models import Files, Category, Tag, Comment
-from .filters import FilesFilter
+from .models import Files, Category, Tag, Comment, FileRating
+from .filters import FilesFilter, CommentFilter, FileRatingFilter
 from .permissions import IsOwnerOrReadOnly
-from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer
+from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, FileRatingSerializer
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -47,26 +47,26 @@ class FilesViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
         
 
-    @action(detail=True, methods=['post'])
-    def rate(self, request, pk=None):
-        file = self.get_object()
-        try:
-            new_rating = float(request.data.get('rating'))
-            if not (0 <= new_rating <= 5):
-                return Response({'error': 'Ocena musi być w zakresie 0-5'}, status=status.HTTP_400_BAD_REQUEST)
-        except (TypeError, ValueError):
-            return Response({'error': 'Nieprawidłowa wartość oceny'}, status=status.HTTP_400_BAD_REQUEST)
+    # @action(detail=True, methods=['post'])
+    # def rate(self, request, pk=None):
+    #     file = self.get_object()
+    #     try:
+    #         new_rating = float(request.data.get('rating'))
+    #         if not (0 <= new_rating <= 5):
+    #             return Response({'error': 'Ocena musi być w zakresie 0-5'}, status=status.HTTP_400_BAD_REQUEST)
+    #     except (TypeError, ValueError):
+    #         return Response({'error': 'Nieprawidłowa wartość oceny'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-        total = file.rating * file.rating_count
-        file.rating_count += 1
-        file.rating = (total + new_rating) / file.rating_count
-        file.save(update_fields=['rating', 'rating_count'])
+    #     total = file.rating * file.rating_count
+    #     file.rating_count += 1
+    #     file.rating = (total + new_rating) / file.rating_count
+    #     file.save(update_fields=['rating', 'rating_count'])
 
-        return Response({
-            'rating': file.rating,
-            'rating_count': file.rating_count
-        }, status=status.HTTP_200_OK)
+    #     return Response({
+    #         'rating': file.rating,
+    #         'rating_count': file.rating_count
+    #     }, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -133,10 +133,21 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CommentFilter
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
     
+class FileRatingViewSet(viewsets.ModelViewSet):
+    queryset = FileRating.objects.all()
+    serializer_class = FileRatingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = FileRatingFilter
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 def download_file(request, filename):
 
