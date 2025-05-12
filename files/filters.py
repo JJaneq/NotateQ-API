@@ -4,7 +4,7 @@ from .models import Files, Category, Books, Tag
 class FilesFilter(filters.FilterSet):
     #TODO: make title search instead of filter
     title = filters.CharFilter(lookup_expr='icontains')
-    author = filters.CharFilter()
+    author = filters.NumberFilter(field_name='author__id')
     category = filters.ModelMultipleChoiceFilter(field_name='categories', queryset=Category.objects.all())
     tags = filters.CharFilter(field_name='tags__name')
     upload_date = filters.DateFromToRangeFilter(field_name='upload_date')
