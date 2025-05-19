@@ -4,7 +4,7 @@ from .models import Files, Category, Books, Tag
 class FilesFilter(filters.FilterSet):
     #TODO: make title search instead of filter
     title = filters.CharFilter(lookup_expr='icontains')
-    author = filters.NumberFilter(field_name='author__id')
+    author = filters.CharFilter(method='filter_author')
     category = filters.ModelMultipleChoiceFilter(field_name='categories', queryset=Category.objects.all())
     tags = filters.CharFilter(field_name='tags__name')
     upload_date = filters.DateFromToRangeFilter(field_name='upload_date')
@@ -20,6 +20,12 @@ class FilesFilter(filters.FilterSet):
     class Meta:
         model = Files
         fields = ['title', 'author', 'categories', 'tags', 'upload_date', 'downloads', 'delete_time', 'date', 'rating', 'books']
+
+    def filter_author(self, queryset, username, value):
+        if value.isdigit():
+            return queryset.filter(author__id=int(value))
+        return queryset.filter(author__username__icontains=value)
+
 
     def filter_to_delete(self, queryset, name, value):
         if value in ['true', True]:
