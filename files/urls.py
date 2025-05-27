@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/users/', UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', UserDetail.as_view(), name='user-detail'),
+    path('api/profile/', UserProfileView.as_view(), name='user-profile'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterView.as_view(), name='user-register'),

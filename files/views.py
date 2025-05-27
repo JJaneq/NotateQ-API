@@ -1,8 +1,10 @@
 import os
 from datetime import timedelta
+from rest_framework.permissions import AllowAny
 
 from .models import Files, Category, Tag, Comment, FileRating
 from .filters import FilesFilter, CommentFilter, FileRatingFilter
+
 from .permissions import IsOwnerOrReadOnly
 from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, FileRatingSerializer
 
@@ -20,7 +22,8 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
 from urllib.parse import quote
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 class FilesViewSet(viewsets.ModelViewSet):
     queryset = Files.objects.all()
@@ -30,7 +33,7 @@ class FilesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, 
                           IsOwnerOrReadOnly]
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
     def increment_downloads(self, request, pk=None):
         file = self.get_object()
         file.downloads += 1
@@ -170,3 +173,19 @@ def download_file(request, filename):
     response = FileResponse(open(filepath, 'rb'), as_attachment=True)
     response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"'
     return response
+
+
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        file_count = Files.objects.filter(author=user).count()
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'file_count': file_count,
+        })
