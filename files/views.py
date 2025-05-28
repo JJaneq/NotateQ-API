@@ -39,6 +39,18 @@ class FilesViewSet(viewsets.ModelViewSet):
         file.downloads += 1
         file.save(update_fields=['downloads'])
         return Response({'downloads': file.downloads}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='user-rating', permission_classes=[IsAuthenticated])
+    def user_rating(self, request, pk=None):
+        file = self.get_object()
+        user = request.user
+
+        try:
+            rating_obj = FileRating.objects.get(file=file, user=user)
+            return Response({'rating': rating_obj.rating}, status=status.HTTP_200_OK)
+        except FileRating.DoesNotExist:
+            return Response({'rating': None}, status=status.HTTP_200_OK)
+
     
     def destroy(self, request, *args, **kwargs):
         file = self.get_object()

@@ -61,6 +61,7 @@ class Files(models.Model):
 class FileRating(models.Model):
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    #TODO rating as Float
     rating = models.PositiveIntegerField()
 
     def __str__(self):
