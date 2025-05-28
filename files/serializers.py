@@ -115,8 +115,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:
             raise serializers.ValidationError("Hasła nie pasują do siebie.")
-        if User.objects.filter(email=attrs['email']).exists():
-            raise serializers.ValidationError("Użytkownik z tym adresem e-mail już istnieje.")
+        if attrs.get('email'):
+            user_qs = User.objects.filter(email=attrs['email'])
+            if self.instance:
+                user_qs = user_qs.exclude(pk=self.instance.pk)
+            if user_qs.exists():
+                raise serializers.ValidationError("Użytkownik z tym adresem e-mail już istnieje.")
         return attrs
     
     def create(self, validated_data):
