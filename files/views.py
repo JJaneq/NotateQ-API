@@ -2,11 +2,13 @@ import os
 from datetime import timedelta
 from rest_framework.permissions import AllowAny
 
-from .models import Files, Category, Tag, Comment, FileRating
+from . import serializers
+from .models import Files, Category, Tag, Comment, FileRating, Follow
 from .filters import FilesFilter, CommentFilter, FileRatingFilter
 
 from .permissions import IsOwnerOrReadOnly
-from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, FileRatingSerializer
+from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, \
+    FileRatingSerializer, FollowSerializer
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -201,3 +203,30 @@ class UserProfileView(APIView):
             'email': user.email,
             'file_count': file_count,
         })
+
+class FollowViewSet(viewsets.ModelViewSet):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Follow.objects.filter(follower=self.request.user)
+
+    def perform_create(self, serializer):
+        if serializer.validated_data['followed'] == self.request.user:
+            raise serializers.ValidationError("Nie możesz obserwować samego siebie.")
+        serializer.save(follower=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='my-following')
+    def my_following(self, request):
+        follows = Follow.objects.filter(follower=request.user)
+        data = [{'id': f.id, 'followed': f.followed.id, 'followed_username': f.followed.username} for f in follows]
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='my-followers')
+    def my_followers(self, request):
+        followers = Follow.objects.filter(followed=request.user)
+        data = [{'id': f.id, 'follower': f.follower.id, 'follower_username': f.follower.username} for f in followers]
+        return Response(data)
+
+

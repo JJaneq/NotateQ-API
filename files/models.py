@@ -75,3 +75,18 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author} on {self.file}'
+
+class Follow(models.Model):
+    follower = models.ForeignKey('auth.User', related_name='following', on_delete=models.CASCADE)
+    followed = models.ForeignKey('auth.User', related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')
+
+    def __str__(self):
+        return f'{self.follower} ➡️ {self.followed}'
+
+    def clean(self):
+        if self.follower == self.followed:
+            raise ValidationError("Nie możesz obserwować samego siebie.")
