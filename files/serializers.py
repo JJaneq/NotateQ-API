@@ -30,14 +30,21 @@ class FilesSerializer(serializers.ModelSerializer):
     )
     tag_names = serializers.SerializerMethodField(read_only=True)
     author = serializers.CharField(source='author.username', read_only=True)
+    bibliography = serializers.ListField(
+        child=serializers.CharField(), required=False, write_only=True
+    )
+    bibliography_titles = serializers.SerializerMethodField(read_only=True)
 
     def get_tag_names(self, obj):
         return [tag.name for tag in obj.tags.all()]
 
+    def get_bibliography_titles(self, obj):
+        return [book.title for book in obj.bibliography.all()]
+
     class Meta:
         model = Files
         fields = ['id', 'title', 'description', 'categories', 'author', 'upload_date', 'file', 'downloads',
-                'tags', 'tag_names', 'delete_time', 'bibliography', 'rating', 'rating_count', 'date']
+                'tags', 'tag_names', 'delete_time', 'bibliography', 'bibliography_titles', 'rating', 'rating_count', 'date']
         extra_kwargs = {'downloads': {'read_only': True}, 
                         'delete_time': {'read_only': True},
                         'rating': {'read_only': True},
@@ -59,7 +66,7 @@ class FilesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         categories = validated_data.pop('categories', [])
-        books_data = validated_data.pop('bibliography', [])
+        book_titles = validated_data.pop('bibliography', [])
         file_instance = Files.objects.create(**validated_data)
         file_instance.author = self.context['request'].user
         
@@ -71,8 +78,8 @@ class FilesSerializer(serializers.ModelSerializer):
         if categories:
             file_instance.categories.set(categories)
 
-        for book in books_data:
-            book_instance, _ = Books.objects.get_or_create(title=book.title)
+        for title in book_titles:
+            book_instance, _ = Books.objects.get_or_create(title=title.strip())
             file_instance.bibliography.add(book_instance)
 
         return file_instance
@@ -150,22 +157,35 @@ class FileRatingSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['rating'] < 1 or attrs['rating'] > 5:
             raise serializers.ValidationError("Ocena musi być w zakresie od 1 do 5.")
-        if FileRating.objects.filter(file=attrs.get('file'), user=self.context.get('request').user).exists():
-            raise serializers.ValidationError("Plik już został oceniony przez tego użytkownika.")
+        # if FileRating.objects.filter(file=attrs.get('file'), user=self.context.get('request').user).exists():
+        #     raise serializers.ValidationError("Plik już został oceniony przez tego użytkownika.")
         if Files.objects.filter(id=attrs.get('file').id).exists() is False:
             raise serializers.ValidationError("Plik nie istnieje.")
         return attrs
-    
+
     def create(self, validated_data):
         file = validated_data['file']
         user = self.context['request'].user
         rating = validated_data['rating']
 
-        # Update the file's rating
-        total = file.rating * file.rating_count
-        file.rating_count += 1
-        file.rating = (total + rating) / file.rating_count
-        file.save(update_fields=['rating', 'rating_count'])
+        try:
+            existing_rating = FileRating.objects.get(file=file, user=user)
 
-        # Create the rating instance
-        return super().create(validated_data)
+            total = file.rating * file.rating_count
+            total = total - existing_rating.rating + rating
+            file.rating = total / file.rating_count
+            file.save(update_fields=['rating'])
+
+
+            existing_rating.rating = rating
+            existing_rating.save(update_fields=['rating'])
+            return existing_rating
+        except FileRating.DoesNotExist:
+
+            total = file.rating * file.rating_count
+            file.rating_count += 1
+            file.rating = (total + rating) / file.rating_count
+            file.save(update_fields=['rating', 'rating_count'])
+
+            validated_data['user'] = user
+            return super().create(validated_data)
