@@ -150,22 +150,35 @@ class FileRatingSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['rating'] < 1 or attrs['rating'] > 5:
             raise serializers.ValidationError("Ocena musi być w zakresie od 1 do 5.")
-        if FileRating.objects.filter(file=attrs.get('file'), user=self.context.get('request').user).exists():
-            raise serializers.ValidationError("Plik już został oceniony przez tego użytkownika.")
+        # if FileRating.objects.filter(file=attrs.get('file'), user=self.context.get('request').user).exists():
+        #     raise serializers.ValidationError("Plik już został oceniony przez tego użytkownika.")
         if Files.objects.filter(id=attrs.get('file').id).exists() is False:
             raise serializers.ValidationError("Plik nie istnieje.")
         return attrs
-    
+
     def create(self, validated_data):
         file = validated_data['file']
         user = self.context['request'].user
         rating = validated_data['rating']
 
-        # Update the file's rating
-        total = file.rating * file.rating_count
-        file.rating_count += 1
-        file.rating = (total + rating) / file.rating_count
-        file.save(update_fields=['rating', 'rating_count'])
+        try:
+            existing_rating = FileRating.objects.get(file=file, user=user)
 
-        # Create the rating instance
-        return super().create(validated_data)
+            total = file.rating * file.rating_count
+            total = total - existing_rating.rating + rating
+            file.rating = total / file.rating_count
+            file.save(update_fields=['rating'])
+
+
+            existing_rating.rating = rating
+            existing_rating.save(update_fields=['rating'])
+            return existing_rating
+        except FileRating.DoesNotExist:
+
+            total = file.rating * file.rating_count
+            file.rating_count += 1
+            file.rating = (total + rating) / file.rating_count
+            file.save(update_fields=['rating', 'rating_count'])
+
+            validated_data['user'] = user
+            return super().create(validated_data)
