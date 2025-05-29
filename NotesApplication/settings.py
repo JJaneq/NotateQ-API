@@ -153,22 +153,18 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'NotesApplication.throttling.DynamicAnonRateThrottle',
+        'NotesApplication.throttling.DynamicUserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'dynamic_anon': '1/minute', # placeholder, will be overridden by DynamicAnonRateThrottle
+        'dynamic_user': '1/minute', # placeholder, will be overridden by DynamicUserRateThrottle
+    }
 }
-
-# JWT settings
-# SIMPLE_JWT = {
-#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-#     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
-#     'SLIDING_TOKEN_LIFETIME': timedelta(days=30),
-#     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
-#     'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
-# }
 
 # Celery settings
 CELERY_TIMEZONE = 'Europe/Warsaw'
