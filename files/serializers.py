@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-from .models import Files, Category, Tag, Books, Comment, FileRating
+from .models import Files, Category, Tag, Books, Comment, FileRating, Follow
 from django.contrib.auth.models import User
 from .utils import send_activation_email
 import os
@@ -189,3 +189,25 @@ class FileRatingSerializer(serializers.ModelSerializer):
 
             validated_data['user'] = user
             return super().create(validated_data)
+
+class FollowSerializer(serializers.ModelSerializer):
+    follower_username = serializers.CharField(source='follower.username', read_only=True)
+    followed_username = serializers.CharField(source='followed.username', read_only=True)
+
+    class Meta:
+        model = Follow
+        fields = ['id', 'follower', 'follower_username', 'followed', 'followed_username', 'created_at']
+        read_only_fields = ['id', 'created_at', 'follower', 'follower_username', 'followed_username']
+
+    def validate(self, attrs):
+        follower = self.context['request'].user
+        followed = attrs['followed']
+        if follower == followed:
+            raise serializers.ValidationError("Nie możesz obserwować samego siebie.")
+        if Follow.objects.filter(follower=follower, followed=followed).exists():
+            raise serializers.ValidationError("Już obserwujesz tego użytkownika.")
+        return attrs
+
+    def create(self, validated_data):
+        validated_data['follower'] = self.context['request'].user
+        return super().create(validated_data)
