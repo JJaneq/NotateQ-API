@@ -189,8 +189,6 @@ def download_file(request, filename):
     return response
 
 
-
-
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -204,6 +202,21 @@ class UserProfileView(APIView):
             'file_count': file_count,
         })
 
+    def put(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+      
+      
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
@@ -229,4 +242,4 @@ class FollowViewSet(viewsets.ModelViewSet):
         data = [{'id': f.id, 'follower': f.follower.id, 'follower_username': f.follower.username} for f in followers]
         return Response(data)
 
-
+      
