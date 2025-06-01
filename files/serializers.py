@@ -21,9 +21,10 @@ class BooksSerializer(serializers.ModelSerializer):
         fields = ['id', 'title']
 
 class FilesSerializer(serializers.ModelSerializer):
-    categories = serializers.PrimaryKeyRelatedField(
+    categories = CategorySerializer(many=True, read_only=True)
+    category_ids = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), 
-        many=True
+        many=True, write_only=True
     )
     tags = serializers.ListField(
         child=serializers.CharField(), required=False, write_only=True
@@ -43,7 +44,7 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'description', 'categories', 'author', 'upload_date', 'file', 'downloads',
+        fields = ['id', 'title', 'description', 'categories', 'category_ids', 'author', 'upload_date', 'file', 'downloads',
                 'tags', 'tag_names', 'delete_time', 'bibliography', 'bibliography_titles', 'rating', 'rating_count', 'date']
         extra_kwargs = {'downloads': {'read_only': True}, 
                         'delete_time': {'read_only': True},
@@ -65,7 +66,7 @@ class FilesSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
-        categories = validated_data.pop('categories', [])
+        categories = validated_data.pop('category_ids', [])
         book_titles = validated_data.pop('bibliography', [])
         file_instance = Files.objects.create(**validated_data)
         file_instance.author = self.context['request'].user
@@ -86,7 +87,7 @@ class FilesSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
-        categories = validated_data.pop('categories', [])
+        categories = validated_data.pop('category_ids', [])
 
         if 'downloads' in validated_data:
             raise serializers.ValidationError("Downloads can't be updated directly.")
