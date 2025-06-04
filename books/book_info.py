@@ -36,8 +36,11 @@ class BookInfo:
             url = f"https://www.googleapis.com/books/v1/volumes?q={self.title}&langRestrict={self.language}"
             print(url)
         else:
-            url = f"https://www.googleapis.com/books/v1/volumes?q=+intitle:{self.title}"
+            url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{self.title}"
         response = requests.get(url)
+
+        if response.json()["totalItems"] <= 0:
+            return []
 
         books = []
         for item in response.json()["items"]:
