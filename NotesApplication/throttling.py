@@ -7,13 +7,13 @@ class DynamicAnonRateThrottle(AnonRateThrottle):
         method = request.method.lower()
 
         RATES = {
-            'get': '30/minute',
-            'post': '1/minute',
-            'put': '1/minute',
-            'delete': '1/minute',
+            'get': '10/second',
+            'post': '1/second',
+            'put': '1/second',
+            'delete': '1/second',
         }
 
-        rate = RATES.get(method, '1/minute')
+        rate = RATES.get(method, '1/second')
         self.rate = rate
         self.num_requests, self.duration = self.parse_rate(rate)
 
@@ -27,13 +27,13 @@ class DynamicUserRateThrottle(UserRateThrottle):
         method = request.method.lower()
 
         RATES = {
-            'get': '120/minute',
-            'post': '20/minute',
-            'put': '20/minute',
-            'delete': '30/minute',
+            'get': '50/second',
+            'post': '10/second',
+            'put': '10/second',
+            'delete': '10/second',
         }
 
-        rate = RATES.get(method, '1/minute')
+        rate = RATES.get(method, '1/second')
         self.rate = rate
         self.num_requests, self.duration = self.parse_rate(rate)
 
