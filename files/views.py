@@ -218,7 +218,7 @@ class UserProfileView(APIView):
 
 
 class FilesListViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Files.objects.all()
+    queryset = Files.objects.all().order_by('-upload_date')
     serializer_class = FilesListSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = FilesFilter
