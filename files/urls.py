@@ -21,7 +21,7 @@ urlpatterns = [
     path('api/profile/', UserProfileView.as_view(), name='user-profile'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('register/', RegisterView.as_view(), name='user-register'),
+    path('api/register/', RegisterView.as_view(), name='user-register'),
     path('activate/<uid64>/<token>/', ActivateView.as_view(), name='user-activate'),
     path('download/<str:filename>/', download_file, name='download-file'),
 ]
