@@ -8,7 +8,7 @@ from .filters import FilesFilter, CommentFilter, FileRatingFilter
 
 from .permissions import IsOwnerOrReadOnly
 from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, \
-    FileRatingSerializer, FollowSerializer
+    FileRatingSerializer, FollowSerializer, FilesListSerializer
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -215,7 +215,22 @@ class UserProfileView(APIView):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-      
+
+class FilesListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Files.objects.all()
+    serializer_class = FilesListSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = FilesFilter
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        return Files.objects.filter(delete_time__isnull=True)
+    
+    @action(detail=False, methods=['get'], url_path='recent')
+    def recent_files(self, request):
+        recent_files = Files.objects.order_by('-upload_date')[:10]
+        serializer = self.get_serializer(recent_files, many=True)
+        return Response(serializer.data)
       
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()

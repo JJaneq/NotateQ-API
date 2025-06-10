@@ -110,6 +110,31 @@ class FilesSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
     
+class FilesListSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    categories = CategorySerializer(many=True, read_only=True)
+    category_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), 
+        many=True, write_only=True
+    )
+    tag_names = serializers.SerializerMethodField(read_only=True)
+    
+    def get_tag_names(self, obj):
+        return [tag.name for tag in obj.tags.all()]
+
+    class Meta:
+        model = Files
+        fields = ['id', 'title', 'author', 'date', 'downloads', 'tag_names', 'rating', 'category_ids', 'categories']
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'title': {'read_only': True},
+            'author': {'read_only': True},
+            'date': {'read_only': True},
+            'downloads': {'read_only': True},
+            'rating': {'read_only': True},
+            'tag_names': {'read_only': True},
+        }
+
 class UserSerializer(serializers.ModelSerializer):
     files = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})

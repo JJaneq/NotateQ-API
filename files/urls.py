@@ -11,7 +11,8 @@ router.register('categories', CategoryViewSet, basename='categories')
 router.register('tags', TagsViewSet, basename='tags')
 router.register('comments', CommentViewSet, basename='comments')
 router.register('files_rating', FileRatingViewSet, basename='file-rating')
-router.register(r'follows', FollowViewSet, basename='follow')
+router.register('follows', FollowViewSet, basename='follow')
+router.register('files_list', FilesListViewSet, basename='files-list')
 
 urlpatterns = [
     path('api/', include(router.urls)),
