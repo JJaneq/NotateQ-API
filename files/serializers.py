@@ -20,6 +20,14 @@ class BooksSerializer(serializers.ModelSerializer):
         model = Books
         fields = ['id', 'title']
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'username': {'read_only': True}}
+
 class FilesSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
     category_ids = serializers.PrimaryKeyRelatedField(
@@ -30,7 +38,10 @@ class FilesSerializer(serializers.ModelSerializer):
         child=serializers.CharField(), required=False, write_only=True
     )
     tag_names = serializers.SerializerMethodField(read_only=True)
-    author = serializers.CharField(source='author.username', read_only=True)
+    author = UserBasicSerializer(read_only=True)
+    author_id = serializers.PrimaryKeyRelatedField(
+        source='author', queryset=User.objects.all(), write_only=True
+    )
     bibliography = serializers.ListField(
         child=serializers.CharField(), required=False, write_only=True
     )
@@ -44,12 +55,13 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'description', 'categories', 'category_ids', 'author', 'upload_date', 'file', 'downloads',
+        fields = ['id', 'title', 'description', 'categories', 'category_ids', 'author', 'author_id', 'upload_date', 'file', 'downloads',
                 'tags', 'tag_names', 'delete_time', 'bibliography', 'bibliography_titles', 'rating', 'rating_count', 'date']
         extra_kwargs = {'downloads': {'read_only': True}, 
                         'delete_time': {'read_only': True},
                         'rating': {'read_only': True},
                         'rating_count': {'read_only': True},
+                        'author': {'read_only': True},
                         }
 
     def validate_file(self, value):
@@ -141,19 +153,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         send_activation_email(user, self.context.get('request'))
         return user
-    
-class UserBasicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username']
-        extra_kwargs = {
-            'id': {'read_only': True},
-            'username': {'read_only': True}}
+            
 class FilesListSerializer(serializers.ModelSerializer):
-    author = UserBasicSerializer(read_only=True)
-    author_id = serializers.PrimaryKeyRelatedField(
-        source='author', queryset=User.objects.all(), write_only=True
-    )
+    author = serializers.CharField(source='author.username', read_only=True)
     categories = CategorySerializer(many=True, read_only=True)
     category_ids = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), 
@@ -166,7 +168,7 @@ class FilesListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'title', 'author', 'author_id', 'date', 'downloads', 'tag_names', 'rating', 'category_ids', 'categories']
+        fields = ['id', 'title', 'author', 'date', 'downloads', 'tag_names', 'rating', 'category_ids', 'categories']
         extra_kwargs = {
             'id': {'read_only': True},
             'title': {'read_only': True},
