@@ -9,6 +9,7 @@ from .filters import FilesFilter, CommentFilter, FileRatingFilter
 from .permissions import IsOwnerOrReadOnly
 from .serializers import FilesSerializer, CategorySerializer, UserSerializer, TagSerializer, CommentSerializer, \
     FileRatingSerializer, FollowSerializer, FilesListSerializer
+from .pagination import CustomPagination
 
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -222,6 +223,7 @@ class FilesListViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = FilesFilter
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         return Files.objects.filter(delete_time__isnull=True)
