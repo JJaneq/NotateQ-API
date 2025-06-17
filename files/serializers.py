@@ -66,11 +66,11 @@ class FilesSerializer(serializers.ModelSerializer):
 
     def validate_file(self, value):
         ext = os.path.splitext(value.name)[1]
-        valid_extensions = ['.pdf', '.docx', '.txt']
+        valid_extensions = ['.pdf', '.docx', '.txt', '.jpg']
         if ext.lower() not in valid_extensions:
             raise ValidationError(f'Nieprawidłowy format pliku. Dozwolone: {", ".join(valid_extensions)}')
 
-        max_size_mb = 5
+        max_size_mb = 10
         if value.size > max_size_mb * 1024 * 1024:
             raise ValidationError(f'Plik jest za duży! Maksymalny rozmiar to {max_size_mb} MB.')
 

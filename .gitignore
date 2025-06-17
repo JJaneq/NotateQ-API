@@ -1,5 +1,7 @@
 media/
+static/
 .env
 __pycache__/
 celerybeat-schedule.*
 .idea
+.venv
